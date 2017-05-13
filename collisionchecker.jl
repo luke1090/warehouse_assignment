@@ -34,6 +34,7 @@ function plotroutes(vehicles::Int,routeplan::Array,routes::Array)
     return actualroute
 end
 
+#=
 function findcollisions(AR::Array)
 # takes some array of vehicle positions (routes) AR
 #(row1/vehicle1) Any[1,2,3,8,13,18,17,16,16,17,18,13,8,9,10,10,9,8,3,2,1]
@@ -68,7 +69,29 @@ function findcollisions(AR::Array)
     end
     
     return collisionMatrix
+end=#
+
+
+function animateroutes(AR::Array,nodecost::Array)
+# takes an array of proposed routes and an array relating node number to node cost
+# returns an animated array showing vehicle locations per timestep
+    animatedroutes = Array{Any}(size(AR,1))
+    
+    for vehicle in eachindex(AR)
+        #println("vehicle",vehicle)
+        animatedroute = []
+        for step in eachindex(AR[vehicle])
+            node = AR[vehicle][step]
+            squarecost = nodecost[node]
+            for x in 1:(squarecost)
+                append!(animatedroute,node)
+            end
+        end
+        animatedroutes[vehicle] = animatedroute
+    end
+    return animatedroutes
 end
+
 
 #given job routes with conflicting timespaces
 #find vehicle with greater slack
