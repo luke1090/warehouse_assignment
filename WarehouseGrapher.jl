@@ -37,7 +37,7 @@ global costs = Array(Int64, 1, 60 * 60 + 59); # Global
 # First divide through by the map size
 for i in 1:x, j in 1:y
     # Convert to node number
-    node_number = (i-0)*x + (j-0);
+    node_number = (i-1)*x + (j-0);
     #println("i-1 ", i-1, " ");
     println("(i,j) = (", i, ",", j, ")    nn=", node_number);
     println("Node numb", node_number);
@@ -53,9 +53,7 @@ for i in 1:x, j in 1:y
 end
 
 
-
 function heuristic(v)
-    #println("Heurisitic returning ", convert(Int64, round(costs[v])));
     return costs[v];
 end
 
@@ -90,11 +88,19 @@ function checkNeighbour(map, adj_mat, dist_mat, i, j)
             y = j + y_offset;
             if ((x > 0) && (x <= size(map)[1]) && (y > 0) && (y <= size(map)[2]))
                 if isValidMove(map[x,y])
-                    #println("\tTRUE ",x," ",y, " ", map[x,y])
-                    adj_mat[(i-1)*size(map)[1] + j, (x-1)*size(map)[1] + y] = true
-                    dist_mat[(i-1)*size(map)[1] + j, (x-1)*size(map)[1] + y] = nodeValue(map[x,y])
 
-                    #println("\t\tTRUE ",(i-1)*size(map)[1] + j," ", (x-1)*size(map)[1] + (y));
+                    adj_mat[(i-1)*size(map)[1] + j, (x-1)*size(map)[1] + y] = true
+
+                    # We increase the cost of a diagonal path by 2, as it requires 'driving' a further distance
+                    if (x_offset == 0 || y_offset == 0)
+                        # If at least one offset is 0, then it is a straight move
+        			    diag_mult = 1;                    
+        		    else 
+                        # A diagonal move
+        			    diag_mult = 2;
+        		    end
+
+                    dist_mat[(i-1)*size(map)[1] + j, (x-1)*size(map)[1] + y] = diag_mult * nodeValue(map[x,y])
                 end
             end
         end
@@ -142,39 +148,43 @@ function generateMapGraph(map)
 end
 
 function main()
-    filename = "WarehouseMap.csv"
-    x = 60;
-    y = 59;
+    filename = "SmallWarehouseMap.csv"
+    x = 16;
+    y = 16;
 
-    start_node = 339;
-    end_node = 2698;
+    start_node = 82;
+    end_node = 222;
     #computeCosts(end_node, x, y);
 
-println("Entering readmap");
     map = readMapCSV(filename, x, y)
 
-    println("Entering mapgraph");
     g, dist_mat = generateMapGraph(map)
 
-    
-    println("Entering solver");
-    
-
-    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+    # The first call to both @time and a_star will give inaccurate results, so we run it again
+    @time path = a_star(g, start_node, end_node, dist_mat);
+    @time path = a_star(g, start_node, end_node, dist_mat);
 
 
-    #draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, nodelabel=1:x * y))
-    println(path);
-    #println(dist_mat[16:32,16:32])
+    # Build the 2d layout for the visualisation of nodes
+    locs_x = Array(Float64, 1, x*y);
+    locs_y = Array(Float64, 1, x*y);
+
+    for i in 1:x, j in 1:y
+        locs_y[(i-1) * x + j] = i;
+        locs_x[(i-1) * x + j] = j;
+    end
+
+    locs_x = vec(locs_x);
+    locs_y = vec(locs_y);
 
     nodefillc = fill(colorant"lightseagreen", x * y);
 
-    # Colour the nodes we travel through
+    # Colour the nodes we travelled through
     for node in path
         nodefillc[node[1]] = colorant"orange";
     end
 
-    draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, nodelabel=1:x * y, nodefillc=nodefillc))
+    draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodelabel=1:x * y, nodefillc=nodefillc))
 end
 
 main();
