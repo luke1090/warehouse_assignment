@@ -4,52 +4,24 @@ using Colors
 using Compose
 
 
-global costs = Array(AbstractFloat, 1, 60 * 59 * 60 * 59);
+global costs = Array(Int64, 1, 16 * 16); # TODO Need to turn dimensions into variables.
+# Would also prefer this wasn't a variable, but not sure how to avoid this.
 
-#=
+
 function computeCosts(target_node, x, y)
-    # Take a vertex and convert it into (x,y)
-    global costsMat = Array(AbstractFloat, 1, 60 * 59 * 60 * 59); # Global
     # First divide through by the map size
     for i in 1:x, j in 1:y
         # Convert to node number
-        node_number = (i-1)*x + (j-1)*y + 1;
-        println("i-1 ", i-1, " ");
-        println("Node numb", node_number);
-
-        target_x = floor(target_node / x);
+        node_number = (i-1)*x + j;
+        
+        target_x = floor(target_node / x) + 1;
         target_y = rem(target_node, y);
         dx = abs(i - target_x)
         dy = abs(j - target_y)
         D = 1; # Straight line move
         D2 = 1.41; # Diagonal move
-        costsMat[node_number] = D * (dx + dy) + (D2 - 2 * D) * min(dx, dy);
+        costs[node_number] = round(D * (dx + dy) + (D2 - 2 * D) * min(dx, dy));
     end
-
-    costs = deepcopy(costsMat);
-end
-=#
-
-target_node = 2698;
-x = 60;
-y = 59;
-global costs = Array(Int64, 1, 60 * 60 + 59); # Global
-# First divide through by the map size
-for i in 1:x, j in 1:y
-    # Convert to node number
-    node_number = (i-1)*x + (j-0);
-    #println("i-1 ", i-1, " ");
-    println("(i,j) = (", i, ",", j, ")    nn=", node_number);
-    println("Node numb", node_number);
-
-    target_x = floor(target_node / x) + 1;
-    target_y = rem(target_node, y);
-    dx = abs(i - target_x)
-    dy = abs(j - target_y)
-    D = 1; # Straight line move
-    D2 = 1.41; # Diagonal move
-    costs[node_number] = round(D * (dx + dy) + (D2 - 2 * D) * min(dx, dy));
-
 end
 
 
@@ -129,12 +101,14 @@ end
 
 function generateMapGraph(map)
 
-    # Set up adjacency and distance matrices, prefill with 'empty'
-    adj_mat = fill(false, size(map)[1]*size(map)[2],size(map)[1]*size(map)[2]);
-    dist_mat = fill(0, size(map)[1]*size(map)[2],size(map)[1]*size(map)[2]);
+    x, y = size(map);
 
-    for i in 1:size(map)[1]
-        for j in 1:size(map)[2]
+    # Set up adjacency and distance matrices, prefill with 'empty'
+    adj_mat = fill(false, x * y, x * y);
+    dist_mat = fill(0, x * y, x * y);
+
+    for i in 1:x
+        for j in 1:y
             if((map[i,j]=="I")||(map[i,j]=="O")||(map[i,j]=="H")) 
                 checkNeighbour(map, adj_mat, dist_mat, i, j)
             end
@@ -152,22 +126,34 @@ function main()
     x = 16;
     y = 16;
 
-    start_node = 82;
-    end_node = 222;
-    #computeCosts(end_node, x, y);
-
+    start_node = 25;
+    end_node = 239;
+    computeCosts(end_node, x, y);
+    
     map = readMapCSV(filename, x, y)
 
     g, dist_mat = generateMapGraph(map)
 
     # The first call to both @time and a_star will give inaccurate results, so we run it again
+    println("Compiling @time and a_star functions. Ignore two results below.");
+    @time path = a_star(g, start_node, end_node, dist_mat);
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+
+    println("Beginning timed trials for no heuristic.")
+    @time path = a_star(g, start_node, end_node, dist_mat);
     @time path = a_star(g, start_node, end_node, dist_mat);
     @time path = a_star(g, start_node, end_node, dist_mat);
 
+    println("Beginning timed trials for heuristic.")
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+
+    println(path)
 
     # Build the 2d layout for the visualisation of nodes
-    locs_x = Array(Float64, 1, x*y);
-    locs_y = Array(Float64, 1, x*y);
+    locs_x = Array(Float64, 1, x*y + 59); # TODO Why + 59?
+    locs_y = Array(Float64, 1, x*y + 59);
 
     for i in 1:x, j in 1:y
         locs_y[(i-1) * x + j] = i;
@@ -177,12 +163,16 @@ function main()
     locs_x = vec(locs_x);
     locs_y = vec(locs_y);
 
-    nodefillc = fill(colorant"lightseagreen", x * y);
+    nodefillc = fill(colorant"lightseagreen", x * y + 59); # TODO WHY 59
 
     # Colour the nodes we travelled through
     for node in path
-        nodefillc[node[1]] = colorant"orange";
+        nodefillc[node[1]] = colorant"orange"; # Color the from node orange
+        nodefillc[node[2]] = colorant"orange"; # Color the to node orange
+        # Not the most efficient way of doing this, but it increases readability for a tiny performance penalty.
+        # It might even be optimised out...
     end
+    
 
     draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodelabel=1:x * y, nodefillc=nodefillc))
 end
