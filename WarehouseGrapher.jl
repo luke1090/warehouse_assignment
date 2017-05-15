@@ -121,36 +121,16 @@ function generateMapGraph(map)
     return g, dist_mat
 end
 
-function main()
-    filename = "SmallWarehouseMap.csv"
-    x = 16;
-    y = 16;
+function path_init(filename, x, y)
 
-    start_node = 25;
-    end_node = 239;
-    computeCosts(end_node, x, y);
-    
     map = readMapCSV(filename, x, y)
 
     g, dist_mat = generateMapGraph(map)
+    return g, dist_mat
+end
 
-    # The first call to both @time and a_star will give inaccurate results, so we run it again
-    println("Compiling @time and a_star functions. Ignore two results below.");
-    @time path = a_star(g, start_node, end_node, dist_mat);
-    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
 
-    println("Beginning timed trials for no heuristic.")
-    @time path = a_star(g, start_node, end_node, dist_mat);
-    @time path = a_star(g, start_node, end_node, dist_mat);
-    @time path = a_star(g, start_node, end_node, dist_mat);
-
-    println("Beginning timed trials for heuristic.")
-    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
-    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
-    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
-
-    println(path)
-
+function draw_path(x, y, path)
     # Build the 2d layout for the visualisation of nodes
     locs_x = Array(Float64, 1, x*y + 59); # TODO Why + 59?
     locs_y = Array(Float64, 1, x*y + 59);
@@ -173,8 +153,31 @@ function main()
         # It might even be optimised out...
     end
     
-
     draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodelabel=1:x * y, nodefillc=nodefillc))
 end
 
-main();
+
+function path_main(start_node, end_node, g, dist_mat)
+    
+    start_node = 25;
+    end_node = 239;
+    computeCosts(end_node, x, y);
+    # The first call to both @time and a_star will give inaccurate results, so we run it again
+    println("Compiling @time and a_star functions. Ignore two results below.");
+    @time path = a_star(g, start_node, end_node, dist_mat);
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+
+    println("Beginning timed trials for no heuristic.")
+    @time path = a_star(g, start_node, end_node, dist_mat);
+    @time path = a_star(g, start_node, end_node, dist_mat);
+    @time path = a_star(g, start_node, end_node, dist_mat);
+
+    println("Beginning timed trials for heuristic.")
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+
+    println(path)
+
+    return path
+end
