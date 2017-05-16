@@ -1,9 +1,11 @@
-function plotroutes(vehicles::Int,routeplan::Array,routes::Array)
-
+function plotroutes(routeplan::Array,routes::Array)
+    
+    vehicles = size(routeplan,1)
+    println("plotting routes for ",vehicles," vehicles")
     actualroute = Array{Any}(vehicles)
 
     for v in eachindex(routeplan)
-        #println("vehicle ",v)
+        println("vehicle ",v)
         startrow = v
         nextrow = v
         jobs = routeplan[v]
@@ -12,10 +14,10 @@ function plotroutes(vehicles::Int,routeplan::Array,routes::Array)
         for i in eachindex(jobs)
             startrow = nextrow
             nextrow = jobs[i]
-            #println("nextrow ", nextrow)
+            println("nextrow ", nextrow)
 
             append!(vehicleroute,routes[startrow,nextrow])
-            #println(vehicleroute)
+            println("updated route ",vehicleroute)
 
             if nextrow > vehicles
                 # i.e. it is a job, not a start position

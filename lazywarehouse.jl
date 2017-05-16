@@ -131,6 +131,6 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
         println("vehicle ", k, " distance: ",sum(costmatrix[i,j]*getvalue(flag[i,j,k]) for i in ui, j in si))
     end
 
-    return floatArrayfromJuMPArray(getvalue(flag))
+    return getroute(floatArrayfromJuMPArray(getvalue(flag)))
 
 end
