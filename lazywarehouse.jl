@@ -19,6 +19,8 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
     v = vehicles
     # u = vehicle origins {x,y,...A,B,C,..}
     # s = vehicle target positions {A',B',C'}
+    vmax = [50000,50000]
+    # vehicle maximum distance/time
 
     ui = 1:u
     si = vehicles+1:u
@@ -75,9 +77,6 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
 
     m = Model(solver = GurobiSolver(Gurobi.Env()))
 
-    vmax = [500000, 500000]
-    # vehicle maximum distance/time
-
     @variable(m, flag[ui,ui,vi], Bin) # indicates a trip from i to j
     @variable(m, venable[vi], Bin) # indicates that the forklift is in use
 
@@ -108,10 +107,7 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
 
     @constraint(m, [k in vi], sum(flag[i,j,k] for j in ui, i=k) == venable[k])
     # for all vehicle origins (U - S) all vehicles must respect their starting position (stored in row s+k)
-
-    @constraint(m, [k in vi], sum(costmatrix[i,j]*flag[i,j,k] for i in ui, j in ui) <= venable[k]*vmax[k])
-    # each vehicle has a maximum distance/time to travel
-
+    
     @constraint(m, [i in ui], sum(flag[i,j,k] for k in vi, j=i) == 0)
     # trips cannot start and end in the same node
 
@@ -135,6 +131,6 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
         println("vehicle ", k, " distance: ",sum(costmatrix[i,j]*getvalue(flag[i,j,k]) for i in ui, j in si))
     end
 
-    return getvalue(flag)
+    return floatArrayfromJuMPArray(getvalue(flag))
 
 end
