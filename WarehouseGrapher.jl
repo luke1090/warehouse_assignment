@@ -156,6 +156,33 @@ function draw_path(x, y, path)
     draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodelabel=1:x * y, nodefillc=nodefillc))
 end
 
+function animate_path(x, y, path)
+    # Build the 2d layout for the visualisation of nodes
+    locs_x = Array(Float64, 1, x*y + 59); # TODO Why + 59?
+    locs_y = Array(Float64, 1, x*y + 59);
+
+    for i in 1:x, j in 1:y
+        locs_y[(i-1) * x + j] = i;
+        locs_x[(i-1) * x + j] = j;
+    end
+
+    locs_x = vec(locs_x);
+    locs_y = vec(locs_y);
+
+    nodefillc = fill(colorant"lightseagreen", x * y + 59); # TODO WHY 59
+
+    # Colour the nodes we travelled through
+    for (index, node) in enumerate(path)
+        nodefillc[node[1]] = colorant"orange"; # Color the from node orange
+        nodefillc[node[2]] = colorant"orange"; # Color the to node orange
+        # Not the most efficient way of doing this, but it increases readability for a tiny performance penalty.
+        # It might even be optimised out...
+        
+    end
+    draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodelabel=1:x * y, nodefillc=nodefillc))
+    #draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodelabel=1:x * y, nodefillc=nodefillc))
+end
+
 
 function calc_path_cost(path, dist_mat)
 
