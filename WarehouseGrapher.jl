@@ -157,15 +157,30 @@ function draw_path(x, y, path)
 end
 
 
+function calc_path_cost(path, dist_mat)
+
+    path_cost = 0;
+
+    # TODO So this isn't great...
+    try
+        for move in path
+            path_cost += dist_mat[move[1], move[2]];
+        end
+    catch
+        path_cost = 0;
+    end
+
+    return path_cost;
+end
+
+
 function path_main(start_node, end_node, g, dist_mat)
-    
-    start_node = 25;
-    end_node = 239;
+
     computeCosts(end_node, x, y);
     # The first call to both @time and a_star will give inaccurate results, so we run it again
     println("Compiling @time and a_star functions. Ignore two results below.");
     @time path = a_star(g, start_node, end_node, dist_mat);
-    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+    #=@time path = a_star(g, start_node, end_node, dist_mat, heuristic);
 
     println("Beginning timed trials for no heuristic.")
     @time path = a_star(g, start_node, end_node, dist_mat);
@@ -178,6 +193,6 @@ function path_main(start_node, end_node, g, dist_mat)
     @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
 
     println(path)
-
+    =#
     return path
 end
