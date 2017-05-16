@@ -36,6 +36,10 @@ function nodeValue(char)
         return 6;
     elseif char == "H"
         return 10;
+    elseif char == "X"
+        return 10000000;
+    else
+        return 10000000;
     end
 end
 
@@ -123,10 +127,10 @@ end
 
 function path_init(filename, x, y)
 
-    map = readMapCSV(filename, x, y)
+    w_map = readMapCSV(filename, x, y)
 
-    g, dist_mat = generateMapGraph(map)
-    return g, dist_mat
+    g, dist_mat = generateMapGraph(w_map)
+    return g, dist_mat, w_map
 end
 
 

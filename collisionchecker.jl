@@ -16,6 +16,9 @@ function plotroutes(routeplan::Array,routes::Array)
             nextrow = jobs[i]
             println("nextrow ", nextrow)
 
+            println(vehicleroute);
+            println(routes);
+            
             append!(vehicleroute,routes[startrow,nextrow])
             println("updated route ",vehicleroute)
 

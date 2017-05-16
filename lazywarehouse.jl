@@ -19,7 +19,7 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
     v = vehicles
     # u = vehicle origins {x,y,...A,B,C,..}
     # s = vehicle target positions {A',B',C'}
-    vmax = [50000,50000]
+    vmax = [200,200]
     # vehicle maximum distance/time
 
     ui = 1:u
@@ -113,6 +113,9 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
 
     @constraint(m, [i in vi, j in vi, k in vi], flag[i,j,k] == 0)
     # vehicles cannot directly go to a pitstop
+
+    @constraint(m, [k in vi], sum(costmatrix[i,j]*flag[i,j,k] for i in ui, j in ui) <= venable[k]*vmax[k])
+    # each vehicle has a maximum distance/time to travel
 
 
     @time begin
