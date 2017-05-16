@@ -69,7 +69,7 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
         # target value is at least jobs + 1 vehicle
         # this can break down if vehicles>jobs but that seems pretty unlikely
         # maybe change this out at some point / write a more robust one
-        println(R)    
+        println(R)
         return sum(size(R[i])[1] for i in eachindex(R)) >= u
     end
 
@@ -115,6 +115,9 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
     @constraint(m, [i in ui], sum(flag[i,j,k] for k in vi, j=i) == 0)
     # trips cannot start and end in the same node
 
+    @constraint(m, [i in vi, j in vi, k in vi], flag[i,j,k] == 0)
+    # vehicles cannot directly go to a pitstop
+
 
     @time begin
     solve(m)
@@ -133,5 +136,5 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
     end
 
     return getvalue(flag)
-    
+
 end
