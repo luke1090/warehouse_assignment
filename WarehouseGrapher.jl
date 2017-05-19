@@ -4,7 +4,7 @@ using Colors
 using Compose
 
 
-function computeCosts(start_node,target_node, costs, x_size, y_size)
+function computeCosts(start_node, target_node, costs, x_size, y_size)
     
     target_x, target_y = nodeToXY(target_node, x_size, y_size)
     start_x, start_y = nodeToXY(start_node, x_size, y_size)
@@ -100,7 +100,6 @@ function checkNeighbour(map, adj_mat, dist_mat, i, j)
             end
         end
     end
-
 end
 
 
@@ -154,7 +153,7 @@ function path_init(filename, x_size, y_size)
 end
 
 
-function draw_path(g ,x_size, y_size, path)
+function draw_path(g, x_size, y_size, path, draw_node_labels)
     # Build the 2d layout for the visualisation of nodes
     locs_x = Array(Float64, 1, nv(g))
     locs_y = Array(Float64, 1, nv(g))
@@ -168,16 +167,21 @@ function draw_path(g ,x_size, y_size, path)
     locs_y = vec(locs_y);
 
     nodefillc = fill(colorant"lightseagreen", nv(g))
+    edgestrokec = fill(colorant"white", ne(g))
+    nodesize = fill(1.0, nv(g))
 
     # Colour the nodes we travelled through
     for node in path
-        nodefillc[node[1]] = colorant"orange"; # Color the from node orange
-        nodefillc[node[2]] = colorant"orange"; # Color the to node orange
-        # Not the most efficient way of doing this, but it increases readability for a tiny performance penalty.
-        # It might even be optimised out...
+        nodefillc[node] = colorant"orange"; # Color the from node orange
+        nodesize[node] = 100000.0
+    end
+
+    if draw_node_labels
+        draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodelabel=1:nv(g), nodefillc=nodefillc, edgestrokec=edgestrokec))
+    else
+        draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=edgestrokec, nodesize=nodesize))
     end
     
-    draw(PDF("nodes.pdf", 160cm, 160cm), gplot(g, locs_x, locs_y, nodelabel=1:nv(g), nodefillc=nodefillc))
 end
 
 # TODO: Not sure how this works.
@@ -226,13 +230,20 @@ function calc_path_cost(path, dist_mat)
 end
 
 
-function path_main(start_node, end_node, g, dist_mat)
+function path_main(start_node, end_node, g, dist_mat, x_size, y_size)
 
-    computeCosts(end_node, x, y);
     # The first call to both @time and a_star will give inaccurate results, so we run it again
-    println("Compiling @time and a_star functions. Ignore two results below.");
-    @time path = a_star(g, start_node, end_node, dist_mat);
-    #=@time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+    #println("Compiling @time and a_star functions. Ignore two results below.");
+    #@time path = a_star(g, start_node, end_node, dist_mat);
+
+    costs = Array(Int64, 1, nv(g))
+
+    heuristic = generateHeuristic(start_node, end_node, costs, x_size, y_size)
+    println("Planning path from ", start_node, " to ", end_node);
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+
+    #=
+    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
 
     println("Beginning timed trials for no heuristic.")
     @time path = a_star(g, start_node, end_node, dist_mat);
