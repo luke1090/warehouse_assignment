@@ -19,7 +19,7 @@ function planroutes(costmatrix::Array,jobs::Int,vehicles::Int)
     v = vehicles
     # u = vehicle origins {x,y,...A,B,C,..}
     # s = vehicle target positions {A',B',C'}
-    vmax = [200,200]
+    vmax = [40000000, 40000000]
     # vehicle maximum distance/time
 
     ui = 1:u
