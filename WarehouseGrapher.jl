@@ -239,8 +239,8 @@ function path_main(start_node, end_node, g, dist_mat, x_size, y_size)
     costs = Array(Int64, 1, nv(g))
 
     heuristic = generateHeuristic(start_node, end_node, costs, x_size, y_size)
-    println("Planning path from ", start_node, " to ", end_node);
-    @time path = a_star(g, start_node, end_node, dist_mat, heuristic);
+    #println("Planning path from ", start_node, " to ", end_node);
+    path = a_star(g, start_node, end_node, dist_mat, heuristic);
 
     #=
     @time path = a_star(g, start_node, end_node, dist_mat, heuristic);

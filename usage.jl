@@ -2,6 +2,9 @@ include("./lazywarehouse.jl")
 include("./collisionchecker.jl")
 include("./WarehouseGrapher.jl")
 
+
+
+
 # define global constants for organizing the route array
 jobcount = 3
 vehiclecount = 2
@@ -10,13 +13,40 @@ u = jobcount + vehiclecount
 
 # Initialise A* for a given map
 x = 120;
-y = 120;
+y = x;
 x_size = x;
 y_size = y;
 
 g, dist_mat, w_map = path_init("120x120WarehouseMap.csv", x, y);
 
+#=
 draw_path(g , x_size, y_size, [], true);
+quit();
+=#
+
+path_main(1, 1, g, dist_mat, x_size, y_size);
+
+open("a_star_time_120.m", "w") do f
+    write(f, "a_star_times_120 = [")
+
+    n = 100
+    elapsedTime = Array(Float64, n, 1)
+    for i=1:n
+        #tic();
+        t1 = time_ns()
+
+        path_main(1084, 14147, g, dist_mat, x_size, y_size);
+        t2 = time_ns()
+        elapsedTime[n] = (t2 - t1)/1.0e9;
+        write(f, string((t2 - t1)/1.0e9) * " ")
+    end
+
+    write(f, "];");
+end
+
+quit()
+
+
 
 jobs = [Dict("job_id" => 1,
              "start_node" => 1084,
@@ -134,4 +164,57 @@ resolvedroutes = resolvecollisions(animatedroutes)
 draw_path(g , x_size, y_size, resolvedroutes[2], false);
 
 #println("Resolved routes");
-#println(resolvedroutes)
+println(resolvedroutes)
+
+println(size(resolvedroutes))
+
+
+open("o_routeplots.m", "w") do f
+    write(f, "routeplots = {")
+
+    for el in routeplots
+
+        write(f, "[ ")
+        for el2 in el
+            write(f, string(el2) * " ")
+        end
+        
+        write(f, "]; ")
+    end
+
+    write(f, "};");
+end
+
+
+open("o_paths.m", "w") do f
+    write(f, "paths = {")
+
+    for el in routedefinitions
+
+        write(f, "[ ")
+        for el2 in el
+            write(f, string(el2) * " ")
+        end
+        
+        write(f, "]; ")
+    end
+
+    write(f, "};");
+end
+
+
+
+open("output.m", "w") do f
+    write(f, "resolvedroutes = [")
+
+    for i=1:size(resolvedroutes, 1)
+
+        for el in resolvedroutes[i]
+            write(f, string(el) * " ")
+        end
+        
+        write(f, ";")
+    end
+
+    write(f, "];");
+end
