@@ -30,7 +30,7 @@ function computeCosts(start_node, target_node, costs, x_size, y_size)
         D = 1; # Straight line move weight
         #D2 = 1.41; # Diagonal move weight
     
-        costs[node_number] = round(50 * (D * ( ((0.1*w + 1) * dx) + ((0.1*(1-w) + 1) * dy) )))
+        costs[node_number] = round(250 * (D * ( ((0.1*w + 1) * dx) + ((0.1*(1-w) + 1) * dy) )))
         # round((D * (dx + dy))+ (D2 - 2 * D) * min(dx, dy)));
     end
 end
@@ -103,28 +103,31 @@ function checkNeighbour(map, adj_mat, dist_mat, i, j)
 end
 
 
-function readMapCSV(filename, MAP_SIZE_X, MAP_SIZE_Y)
+function readMapCSV(filename)
    
     fp = open(filename, "r")
-    map = Array(String,MAP_SIZE_X,MAP_SIZE_Y)
-    
+    linemap = readlines(fp)
+    map = []
 
-    for i in 1:MAP_SIZE_X
-        line = readline(fp)
-        # Ensure we don't read more Y values than we intended
-        map[i,:] = [strip(string(s)) for s in split(line,",")[1:MAP_SIZE_Y]]
-        # println(map[i,:]);
+    for i in eachindex(linemap)
+        linestring = chomp(linemap[i])
+        linearray = split(linestring,",")
+        if isempty(map)
+            map = linearray
+        else
+            map = hcat(map,linearray)
+        end
     end
-
     close(fp)
 
-    return map
+    map_y, map_x = size(map) # number of rows, number of columns
+    return map, map_x, map_y
 end
 
 
 function generateMapGraph(map)
 
-    x, y = size(map);
+    y, x = size(map); # rows, columns
 
     # Set up adjacency and distance matrices, prefill with 'empty'
     adj_mat = fill(false, x * y, x * y);
@@ -144,16 +147,19 @@ function generateMapGraph(map)
     return g, dist_mat
 end
 
-function path_init(filename, x_size, y_size)
+function path_init(filename)
 
-    w_map = readMapCSV(filename, x_size, y_size)
+    w_map, map_x, map_y = readMapCSV(filename)
     g, dist_mat = generateMapGraph(w_map)
 
-    return g, dist_mat, w_map
+    return g, dist_mat, w_map, map_x, map_y
 end
 
 
-function draw_path(g, x_size, y_size, path, draw_node_labels)
+function draw_path(filename, path, draw_node_labels)
+    
+    g, dist_mat, w_map, x_size, y_size = path_init(filename)
+    
     # Build the 2d layout for the visualisation of nodes
     locs_x = Array(Float64, 1, nv(g))
     locs_y = Array(Float64, 1, nv(g))
